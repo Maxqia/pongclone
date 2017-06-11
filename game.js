@@ -30,12 +30,9 @@ function gameTick() {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height); // also clears it!
 
-  pad1y += pad1grav;
-  pad2y += pad2grav;
   ctx.fillStyle = "white";
-  drawPaddle(false, pad1y);
-  drawPaddle(true, pad2y);
-  drawBall();
+  drawPaddles();
+  drawBall(); // more like update...
   if (!pause) window.requestAnimationFrame(gameTick);
 }
 
@@ -50,19 +47,11 @@ function drawBall() {
   // switch y direction if it hits the ceiling
   if (ballYpos <= 0 || ballYpos >= (y_size - ball_size)) {
     ballYgrav *= -1;
-    /*ballXpos += ballXgrav;
-    ballYpos += ballYgrav;*/
-    //ballYpos -= 1;
-    //pause = true;
   }
 
   if (ifCollidePaddle(false, pad1y) || // note, half the ball dissapears
       ifCollidePaddle(true,pad2y)) {   // when hit by paddle (it used to be a bug, but I liked it)
         if (!stillCollidePaddle) ballXgrav *= -1;
-        //ballXpos += 1;
-        //ballXpos += ballXgrav;
-        //ballYpos += ballYgrav;
-        //pause = true;
         stillCollidePaddle = true;
   } else stillCollidePaddle = false;
 
@@ -70,9 +59,23 @@ function drawBall() {
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
 }
 
-function drawPaddle(right, yPos) {
-  ctx.fillRect(getPaddleXPos(right),yPos,
-    paddle_width, paddle_length);
+function drawPaddles() {
+  pad1y += pad1grav;
+  pad2y += pad2grav;
+
+  // we want it to go off the screen so it meshes with the window
+  if (pad1y <= -paddle_move_velocity || pad1y >= (y_size - paddle_length) + paddle_move_velocity) {
+    pad1y -= pad1grav;
+    pad1grav = 0;
+    //console.log(pad1y);
+  }
+
+  if (pad2y <= -paddle_move_velocity || pad2y >= (y_size - paddle_length) + paddle_move_velocity) {
+    pad2y -= pad2grav;
+    pad2grav = 0;
+  }
+  drawPaddle(false, pad1y);
+  drawPaddle(true, pad2y);
 }
 
 function ifCollidePaddle(right, yPos) {
@@ -87,6 +90,10 @@ function ifCollidePaddle(right, yPos) {
       && ballYpos + ball_size >= yPos1 && ballYpos + ball_size <= yPos2)
 }
 
+function drawPaddle(right, yPos) {
+  ctx.fillRect(getPaddleXPos(right),yPos,
+    paddle_width, paddle_length);
+}
 
 function getPaddleXPos(right) {
   var xPos;
