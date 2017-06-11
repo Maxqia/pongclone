@@ -7,8 +7,8 @@ const paddle_width = 15;
 const paddle_distance_edge = 40;
 const paddle_move_velocity = 4;
 const ball_size = 4;
-const ball_y_velocity = 4;
-const ball_x_velocity = 1;
+const ball_y_velocity = 2;
+const ball_x_velocity = 4;
 // -- end constants --
 
 canvas = document.getElementById('mainCanvas');
@@ -54,17 +54,35 @@ function drawBall() {
     //pause = true;
   }
 
+  if (ifCollidePaddle(false, pad1y) ||
+      ifCollidePaddle(true,pad2y)) ballXgrav *= -1;
+
 
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
 }
 
 function drawPaddle(right, yPos) {
+  ctx.fillRect(getPaddleXPos(right),yPos,
+    paddle_width, paddle_length);
+}
+
+function ifCollidePaddle(right, yPos) {
+  xPos1 = xPos2 = getPaddleXPos(right);
+  yPos1 = yPos2 = yPos;
+  xPos2 += paddle_width;
+  yPos2 += paddle_length;
+
+  return (ballXpos >= xPos1 && ballXpos <= xPos2
+      && ballYpos >= yPos1 && ballYpos <= yPos2)
+}
+
+
+function getPaddleXPos(right) {
   var xPos;
   if (right) {
     xPos = x_size - (paddle_distance_edge + paddle_width);
   } else xPos = paddle_distance_edge;
-  ctx.fillRect(xPos,yPos,
-    paddle_width, paddle_length);
+  return xPos;
 }
 
 document.addEventListener('keydown', function(event) {
@@ -96,7 +114,3 @@ document.addEventListener('keyup', function(event) {
         break;
   }
 });
-
-function onKey(upOrDown, keyCode) {
-
-}
