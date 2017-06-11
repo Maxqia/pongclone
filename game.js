@@ -1,14 +1,15 @@
 // -- constants --
-const UP = 38, DOWN = 40, S = 83, W = 87;
-const x_size = 400;
-const y_size = 300;
-const paddle_length = 50;
-const paddle_width = 15;
-const paddle_distance_edge = 40;
-const paddle_move_velocity = 4;
-const ball_size = 4;
-const ball_y_velocity = 2;
-const ball_x_velocity = 4;
+const UP = 38, DOWN = 40, S = 83, W = 87, ESC = 27; // keycodes
+const x_size = 600; // 800
+const y_size = 450; // 600
+const paddle_length = y_size / 6; // 100
+const paddle_width = x_size * 3 / 160; // 15
+const paddle_distance_edge = x_size/4;
+const paddle_move_velocity = paddle_length / 10; // 10
+const ball_size = y_size / 100; // 6
+const ball_y_velocity = ball_size * 2 / 3; // 4
+const ball_x_velocity = ball_size; // 6
+const zone_thickness = x_size / 160; // 5
 // -- end constants --
 
 canvas = document.getElementById('mainCanvas');
@@ -16,7 +17,7 @@ canvas.width = x_size;
 canvas.height = y_size;
 
 ctx = canvas.getContext("2d");
-pause = false;
+pause = true;
 pad1y = pad2y = (y_size - paddle_length) / 2 // top of the paddle (in center)
 pad1grav = pad2grav = 0;
 ballXpos = (x_size - ball_size) / 2
@@ -31,8 +32,11 @@ function gameTick() {
   ctx.fillRect(0, 0, canvas.width, canvas.height); // also clears it!
 
   ctx.fillStyle = "white";
-  drawPaddles();
   drawBall(); // more like update...
+  drawPaddles();
+
+  //ctx.fillStyle = "gray";
+  drawRules(); // depends on drawBall
   if (!pause) window.requestAnimationFrame(gameTick);
 }
 
@@ -41,9 +45,6 @@ function drawBall() {
   ballXpos += ballXgrav;
   ballYpos += ballYgrav;
 
-  // roll over the sides
-  if (ballXpos <= 0 - ball_size) ballXpos += (x_size + ball_size);
-  if (ballXpos >= x_size + ball_size) ballXpos -= (x_size + ball_size);
   // switch y direction if it hits the ceiling
   if (ballYpos <= 0 || ballYpos >= (y_size - ball_size)) {
     ballYgrav *= -1;
@@ -130,5 +131,49 @@ document.addEventListener('keyup', function(event) {
     case DOWN :
         pad2grav = 0;
         break;
+    case ESC :
+        console.log("tigged");
+        pause = !pause;
+        window.requestAnimationFrame(gameTick);
+        break;
   }
 });
+
+var midrules = false ;
+scoreElement = document.getElementById("score");
+pad1score = 0;
+pad2score = 0;
+function drawRules() {
+  // roll over the sides and switch rules
+  if (ballXpos <= 0 - ball_size) {
+    if (!midrules) pad2score++;
+    midrules = true;
+    ballXpos += (x_size + ball_size);
+  }
+  if (ballXpos >= x_size + ball_size) {
+    if (!midrules) pad1score++;
+    midrules = true;
+    ballXpos -= (x_size + ball_size);
+  }
+  if (ballXpos >= (x_size)/2 - zone_thickness &&
+      ballXpos <= (x_size)/2 + zone_thickness) {
+    if (midrules) {
+      oldXPos = ballXpos - ballXgrav;
+      if (oldXPos > (x_size/2)) {
+        pad1score++;
+      } else pad2score++;
+    }
+    midrules = false;
+   }
+  scoreElement.innerHTML = pad1score.toString() + " " + pad2score.toString();
+
+  ctx.globalAlpha = 0.1
+  if (midrules) {
+    ctx.fillRect((x_size - (2 * zone_thickness))/2 , 0, 2 * zone_thickness, y_size);
+  } else {
+    ctx.fillRect(0, 0, zone_thickness, y_size);
+    ctx.fillRect(x_size - zone_thickness, 0, zone_thickness, y_size);
+  }
+  ctx.globalAlpha = 1;
+
+}
