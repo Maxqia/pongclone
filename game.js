@@ -23,7 +23,7 @@ ballXpos = (x_size - ball_size) / 2
 ballYpos = (y_size - ball_size) / 2
 ballXgrav = Math.random() >= 0.5 ? ball_x_velocity : -ball_x_velocity;
           //(Math.random() * 2) - 1;
-ballYgrav = ball_y_velocity;
+ballYgrav = Math.random() >= 0.5 ? ball_y_velocity : -ball_y_velocity;
 
 window.requestAnimationFrame(gameTick);
 function gameTick() {
@@ -39,6 +39,7 @@ function gameTick() {
   if (!pause) window.requestAnimationFrame(gameTick);
 }
 
+stillCollidePaddle = false;
 function drawBall() {
   ballXpos += ballXgrav;
   ballYpos += ballYgrav;
@@ -51,11 +52,19 @@ function drawBall() {
     ballYgrav *= -1;
     /*ballXpos += ballXgrav;
     ballYpos += ballYgrav;*/
+    //ballYpos -= 1;
     //pause = true;
   }
 
-  if (ifCollidePaddle(false, pad1y) ||
-      ifCollidePaddle(true,pad2y)) ballXgrav *= -1;
+  if (ifCollidePaddle(false, pad1y) || // note, half the ball dissapears
+      ifCollidePaddle(true,pad2y)) {   // when hit by paddle (it used to be a bug, but I liked it)
+        if (!stillCollidePaddle) ballXgrav *= -1;
+        //ballXpos += 1;
+        //ballXpos += ballXgrav;
+        //ballYpos += ballYgrav;
+        //pause = true;
+        stillCollidePaddle = true;
+  } else stillCollidePaddle = false;
 
 
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
@@ -74,6 +83,8 @@ function ifCollidePaddle(right, yPos) {
 
   return (ballXpos >= xPos1 && ballXpos <= xPos2
       && ballYpos >= yPos1 && ballYpos <= yPos2)
+      || (ballXpos + ball_size >= xPos1 && ballXpos + ball_size <= xPos2
+      && ballYpos + ball_size >= yPos1 && ballYpos + ball_size <= yPos2)
 }
 
 
