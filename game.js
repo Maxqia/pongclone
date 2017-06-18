@@ -5,10 +5,10 @@ const y_size = 450; // 600
 const paddle_length = y_size / 6; // 100
 const paddle_width = x_size * 3 / 160; // 15
 const paddle_distance_edge = x_size/4;
-const paddle_move_velocity = paddle_length / 10; // 10
-const ball_size = y_size / 100; // 6
-const ball_y_velocity = ball_size * 2 / 3; // 4
-const ball_x_velocity = ball_size; // 6
+const paddle_move_velocity = 1; // 10
+const ball_size = /*y_size / 100*/ 10; // 6
+const ball_y_velocity = y_size * 4/600; // 4
+const ball_x_velocity = x_size * 6/800; // 6
 const zone_thickness = x_size / 160; // 5
 // -- end constants --
 
@@ -20,6 +20,7 @@ ctx = canvas.getContext("2d");
 pause = true;
 pad1y = pad2y = (y_size - paddle_length) / 2 // top of the paddle (in center)
 pad1grav = pad2grav = 0;
+pad1dir = pad2dir = 0;
 ballXpos = (x_size - ball_size) / 2
 ballYpos = (y_size - ball_size) / 2
 ballXgrav = Math.random() >= 0.5 ? ball_x_velocity : -ball_x_velocity;
@@ -60,17 +61,32 @@ function drawBall() {
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
 }
 
+pad1vel = 0;
+pad1friction = 0;
 function drawPaddles() {
-  pad1y += pad1grav;
-  pad2y += pad2grav;
+  pad1vel += pad1grav;
+  pad1vel -= /*pad1dir  paddle_move_velocity/2 */ pad1vel / 16;
+  if (Math.abs(pad1vel) < pad1vel / 16) pad1vel = 0;
+  pad1y += pad1vel;
 
   // we want it to go off the screen so it meshes with the window
-  if (pad1y <= -paddle_move_velocity || pad1y >= (y_size - paddle_length) + paddle_move_velocity) {
+  /*if (pad1y <= -paddle_move_velocity || pad1y >= (y_size - paddle_length) + paddle_move_velocity) {
     pad1y -= pad1grav;
     pad1grav = 0;
     //console.log(pad1y);
+  }*/
+  if (pad1y <= 0) {
+    pad1y = 0;
+    pad1vel = 0;
+    pad1grav = 0;
+  }
+  if (pad1y >= (y_size - paddle_length)) {
+    pad1y = (y_size - paddle_length);
+    pad1vel = 0;
+    pad1grav = 0;
   }
 
+pad2y += pad2grav;
   if (pad2y <= -paddle_move_velocity || pad2y >= (y_size - paddle_length) + paddle_move_velocity) {
     pad2y -= pad2grav;
     pad2grav = 0;
@@ -108,15 +124,19 @@ document.addEventListener('keydown', function(event) {
   switch (event.keyCode) {
     case W :
         pad1grav = -paddle_move_velocity;
+        pad1dir = -1;
         break;
     case S :
         pad1grav = paddle_move_velocity;
+        pad1dir = 1;
         break;
     case UP :
         pad2grav = -paddle_move_velocity;
+        pad2dir = -1;
         break;
     case DOWN :
         pad2grav = paddle_move_velocity;
+        pad2dir = 1;
         break;
   }
 });
