@@ -5,7 +5,7 @@ const y_size = 450; // 600
 const paddle_length = y_size / 6; // 100
 const paddle_width = x_size * 3 / 160; // 15
 const paddle_distance_edge = x_size/4;
-const paddle_move_velocity = 1; // 10
+const paddle_move_velocity = 0.8; // 10
 const ball_size = /*y_size / 100*/ 10; // 6
 const ball_y_velocity = y_size * 4/600; // 4
 const ball_x_velocity = x_size * 6/800; // 6
@@ -18,9 +18,13 @@ canvas.height = y_size;
 
 ctx = canvas.getContext("2d");
 pause = true;
-pad1y = pad2y = (y_size - paddle_length) / 2 // top of the paddle (in center)
-pad1grav = pad2grav = 0;
-pad1dir = pad2dir = 0;
+
+ypad = new Array(3);
+padgrav = new Array(3);
+padvel = new Array(3);
+ypad[1] = ypad[2] = (y_size - paddle_length) / 2; // top of the paddle (in center)
+padgrav[1] = padgrav[2] = padvel[1] = padvel[2] = 0;
+
 ballXpos = (x_size - ball_size) / 2
 ballYpos = (y_size - ball_size) / 2
 ballXgrav = Math.random() >= 0.5 ? ball_x_velocity : -ball_x_velocity;
@@ -41,7 +45,7 @@ function gameTick() {
   if (!pause) window.requestAnimationFrame(gameTick);
 }
 
-stillCollidePaddle = false;
+//stillCollidePaddle = false;
 function drawBall() {
   ballXpos += ballXgrav;
   ballYpos += ballYgrav;
@@ -51,48 +55,37 @@ function drawBall() {
     ballYgrav *= -1;
   }
 
-  if (ifCollidePaddle(false, pad1y) || // note, half the ball dissapears
-      ifCollidePaddle(true,pad2y)) {   // when hit by paddle (it used to be a bug, but I liked it)
-        if (!stillCollidePaddle) ballXgrav *= -1;
-        stillCollidePaddle = true;
-  } else stillCollidePaddle = false;
+  if (ifCollidePaddle(false, ypad[1]) || // note, half the ball dissapears
+      ifCollidePaddle(true,ypad[2])) {   // when hit by paddle (it used to be a bug, but I liked it)
+        /*if (!stillCollidePaddle)*/ ballXgrav *= -1;
+        //stillCollidePaddle = true;
+  } //else stillCollidePaddle = false;
 
 
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
 }
 
-pad1vel = 0;
-pad1friction = 0;
 function drawPaddles() {
-  pad1vel += pad1grav;
-  pad1vel -= /*pad1dir  paddle_move_velocity/2 */ pad1vel / 16;
-  if (Math.abs(pad1vel) < pad1vel / 16) pad1vel = 0;
-  pad1y += pad1vel;
+  for (ball = 1; ball < 3; ball++) {
+    console.log(ypad[ball].toString())
+    padvel[ball] += padgrav[ball];
+    padvel[ball] -= /*pad1dir  paddle_move_velocity/2 */ padvel[ball] / 16;
+    if (Math.abs(padvel[ball]) < padvel[ball] / 16) padvel[ball] = 0;
+    ypad[ball] += padvel[ball];
+    console.log(ypad[ball].toString());
 
-  // we want it to go off the screen so it meshes with the window
-  /*if (pad1y <= -paddle_move_velocity || pad1y >= (y_size - paddle_length) + paddle_move_velocity) {
-    pad1y -= pad1grav;
-    pad1grav = 0;
-    //console.log(pad1y);
-  }*/
-  if (pad1y <= 0) {
-    pad1y = 0;
-    pad1vel = 0;
-    pad1grav = 0;
+    if (ypad[ball] < 0) {
+      ypad[ball] = 0;
+      padvel[ball] = 0;
+      //padgrav[ball] = 0;
+    }
+    if (ypad[ball] > (y_size - paddle_length)) {
+      ypad[ball] = (y_size - paddle_length);
+      padvel[ball] = 0;
+      //padgrav[ball] = 0;
+    }
+    drawPaddle(ball == 2, ypad[ball]);
   }
-  if (pad1y >= (y_size - paddle_length)) {
-    pad1y = (y_size - paddle_length);
-    pad1vel = 0;
-    pad1grav = 0;
-  }
-
-pad2y += pad2grav;
-  if (pad2y <= -paddle_move_velocity || pad2y >= (y_size - paddle_length) + paddle_move_velocity) {
-    pad2y -= pad2grav;
-    pad2grav = 0;
-  }
-  drawPaddle(false, pad1y);
-  drawPaddle(true, pad2y);
 }
 
 function ifCollidePaddle(right, yPos) {
@@ -123,20 +116,16 @@ function getPaddleXPos(right) {
 document.addEventListener('keydown', function(event) {
   switch (event.keyCode) {
     case W :
-        pad1grav = -paddle_move_velocity;
-        pad1dir = -1;
+        padgrav[1] = -paddle_move_velocity;
         break;
     case S :
-        pad1grav = paddle_move_velocity;
-        pad1dir = 1;
+        padgrav[1] = paddle_move_velocity;
         break;
     case UP :
-        pad2grav = -paddle_move_velocity;
-        pad2dir = -1;
+        padgrav[2] = -paddle_move_velocity;
         break;
     case DOWN :
-        pad2grav = paddle_move_velocity;
-        pad2dir = 1;
+        padgrav[2] = paddle_move_velocity;
         break;
   }
 });
@@ -145,11 +134,11 @@ document.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case W :
     case S :
-        pad1grav = 0;
+        padgrav[1] = 0;
         break;
     case UP :
     case DOWN :
-        pad2grav = 0;
+        padgrav[2] = 0;
         break;
     case ESC :
         console.log("tigged");
