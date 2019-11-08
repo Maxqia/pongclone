@@ -53,13 +53,43 @@ function drawBall() {
   // switch y direction if it hits the ceiling
   if (ballYpos <= 0 || ballYpos >= (y_size - ball_size)) {
     ballYgrav *= -1;
+    if (ballYpos <= 0) ballYpos = 0;
+    if (ballYpos >= (y_size - ball_size)) ballYpos = (y_size - ball_size);
   }
 
-  if (ifCollidePaddle(false, ypad[1]) || // note, half the ball dissapears
+  for (ball = 1; ball < 3; ball++) {
+    right = ball == 2;
+     if (ifCollidePaddle(right, ypad[ball])) {
+       // go the direction of the ball on the outside of the paddle
+
+       if (ballYpos <= ypad[ball]) {
+         ballYgrav = -ball_y_velocity;
+       }
+       if (ballYpos + ball_size >= ypad[ball] + paddle_length) {
+         ballYgrav = ball_y_velocity;
+       }
+
+       if (ballXpos <= getPaddleXPos(right) ) {
+         ballXgrav = -ball_x_velocity;
+       }
+       if (ballXpos + ball_size >= getPaddleXPos(right) + paddle_width) {
+         ballXgrav = ball_x_velocity;
+       }
+
+       //while(ifCollidePaddle(right, ypad[ball])) {
+         ballXpos += ballXgrav / 2;
+         ballYpos += ballYgrav / 2;
+       //}
+     }
+  }
+  /*if (ifCollidePaddle(false, ypad[1]) || // note, half the ball dissapears
       ifCollidePaddle(true,ypad[2])) {   // when hit by paddle (it used to be a bug, but I liked it)
-        /*if (!stillCollidePaddle)*/ ballXgrav *= -1;
+        ballXgrav *= -1;
+
+
+        /*if (!stillCollidePaddle)*/
         //stillCollidePaddle = true;
-  } //else stillCollidePaddle = false;
+  //} //else stillCollidePaddle = false;
 
 
   ctx.fillRect(ballXpos, ballYpos, ball_size, ball_size);
@@ -67,12 +97,12 @@ function drawBall() {
 
 function drawPaddles() {
   for (ball = 1; ball < 3; ball++) {
-    console.log(ypad[ball].toString())
+    //console.log(ypad[ball].toString())
     padvel[ball] += padgrav[ball];
     padvel[ball] -= /*pad1dir  paddle_move_velocity/2 */ padvel[ball] / 16;
     if (Math.abs(padvel[ball]) < padvel[ball] / 16) padvel[ball] = 0;
     ypad[ball] += padvel[ball];
-    console.log(ypad[ball].toString());
+    //console.log(ypad[ball].toString());
 
     if (ypad[ball] < 0) {
       ypad[ball] = 0;
